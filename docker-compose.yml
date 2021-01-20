@@ -145,7 +145,7 @@ services:
       - deluge
       - jackett
     volumes:
-      - ${CONFIG_DIRECTORY}/lidarr/config:/config
+      - ${CONFIG_DIRECTORY}lidarr/config:/config
       - ${DATA_DIRECTORY}music:/music
       - ${DATA_DIRECTORY}torrents/complete:/mnt/media/torrents/complete
     restart: always
