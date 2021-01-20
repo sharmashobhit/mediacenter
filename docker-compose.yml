@@ -199,7 +199,7 @@ services:
     container_name: bazarr
     environment:
       - PUID=${PUID}
-      - PGID=${GUID}
+      - PGID=${PGID}
       - TZ=${TZ}
     volumes:
       - ${CONFIG_DIRECTORY}bazarr/config:/config
