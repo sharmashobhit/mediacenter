@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+    samba:
+        image: dperson/samba
+        container_name: samba
+        volumes:
+            - ${DATA_DIRECTORY}:/media/hdd1
+        ports:
+            - 139:139
+            - 445:445
+        environment:
+            - NMDB=yes
+            - PERMISSIONS=yes
+            - USER=${SAMBA_USER};${SAMBA_PASS}
+            - SHARE1=Media;/media/hdd1;yes;no;no;${SAMBA_USER}
+            - USERID=${PUID}
+            - GROUPID=${PGID}
+        restart: unless-stopped
