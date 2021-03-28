@@ -1,0 +1,34 @@
+version: "3"
+services:
+  jellyfin:
+    image: linuxserver/jellyfin
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=192.168.1.169
+    volumes:
+      - ${CONFIG_DIRECTORY}jellyfin:/config
+        #- ${DATA_DIRECTOY}tvseries:/data/tvshows
+        #- ${CONFIG_DIRECTORY}jellyfin/config:/config
+      - ${DATA_DIRECTORY}Shows:/data/tvshows
+      - ${DATA_DIRECTORY}Movies:/data/movies
+      - ${DATA_DIRECTORY}music:/data/music
+      - /opt/vc/lib:/opt/vc/lib
+        #- ${DATA_DIRECTORY}books:/data/books
+    ports:
+      - 8096:8096
+      - 80:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    devices:
+        #- /dev/dri:/dev/dri #optional
+        #- /dev/vcsm:/dev/vcsm #optional
+        #- /dev/vchiq:/dev/vchiq #optional
+      - /dev/video10:/dev/video10 #optional
+      - /dev/video11:/dev/video11 #optional
+      - /dev/video12:/dev/video12 #optional
+    restart: unless-stopped
+

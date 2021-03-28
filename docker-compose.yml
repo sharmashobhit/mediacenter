@@ -37,37 +37,42 @@ services:
       - 8112:8112
         # Bazarr
       - 6767:6767
+        # NZBHydra2
+      - 5076:5076
+        # Flaresolverr
+      - 8191:8191
     ulimits:
       memlock:
         soft: -1
         hard: -1
     network_mode: bridge
-  emby:
-    image: ghcr.io/linuxserver/emby
-    container_name: emby
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
+    #  emby:
+    #image: ghcr.io/linuxserver/emby
+    #container_name: emby
+    #environment:
+    #  - PUID=${PUID}
+    #  - PGID=${PGID}
+    #  - TZ=${TZ}
     #  - UMASK_SET=<022> #optional
-    volumes:
-      - ${CONFIG_DIRECTORY}emby/config:/config
-      - ${DATA_DIRECTORY}Shows:/data/tvshows
-      - ${DATA_DIRECTORY}Movies:/data/movies
-      - ${DATA_DIRECTORY}music:/data/music
-      - ${DATA_DIRECTORY}books:/data/books
-    #  - /path/for/transcoding:/transcode #optional
-      - /opt/vc/lib:/opt/vc/lib #optional
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-    devices:
+    #volumes:
+    #  - ${CONFIG_DIRECTORY}emby/config:/config
+    #  - ${DATA_DIRECTORY}Shows:/data/tvshows
+    #  - ${DATA_DIRECTORY}Movies:/data/movies
+    #  - ${DATA_DIRECTORY}music:/data/music
+    #  - ${DATA_DIRECTORY}books:/data/books
+    ##  - /path/for/transcoding:/transcode #optional
+    #  - /opt/vc/lib:/opt/vc/lib #optional
+    #ports:
+    #  - 80:8096
+    #  - 8096:8096
+    #  - 8920:8920 #optional
+    #devices:
     #  - /dev/dri:/dev/dri #optional
-      - /dev/vchiq:/dev/vchiq #optional
+    #  - /dev/vchiq:/dev/vchiq #optional
     #  - /dev/video10:/dev/video10 #optional
     #  - /dev/video11:/dev/video11 #optional
     #  - /dev/video12:/dev/video12 #optional
-    restart: always
+    #restart: always
   deluge:
     image: linuxserver/deluge
     container_name: deluge
@@ -209,3 +214,39 @@ services:
     restart: always
     depends_on:
       - vpn
+  nzbhydra2:
+    image: linuxserver/nzbhydra2
+    container_name: nzbhydra2
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_DIRECTORY}nzbhydra2:/config
+      - ${DATA_DIRECTORY}nzbhydra2:/downloads
+    network_mode: service:vpn
+    restart: always
+    depends_on:
+      - vpn
+  flaresolverr:
+    image: flaresolverr/flaresolverr
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+    restart: always
+    depends_on:
+      - vpn
+    network_mode: service:vpn
+    #  organizr:
+    #image: organizr/organizr
+    #restart: always
+    #ports:
+    #  - 8081:80
+    #environment:
+    #  - PUID=${PUID}
+    #  - PGID=${PGID}
+    #  - TZ=${TZ}
+    #    - branch="v2-master"
+    #    - fpm="false"
+    #        volumes:
+    #     - ${CONFIG_DIRECTORY}organizr:/config
