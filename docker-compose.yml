@@ -1,51 +1,85 @@
 version: "3"
 services:
-  vpn:
-    image: bubuntux/nordvpn:3.7.4
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    sysctls:
-      - net.ipv4.conf.all.rp_filter=2
-    devices:
-      - /dev/net/tun
+  #vpn:
+  #  #image: bubuntux/nordvpn:latest
+  #  image: bubuntux/nordvpn:v1.0
+  #  #command: sleep 10000
+  #  container_name: vpn
+  #  cap_add:
+  #    - NET_ADMIN
+  #    - SYS_MODULE
+  #  #restart: always
+  # sysctls:
+  #    - net.ipv4.conf.all.rp_filter=2
+  #  devices:
+  #    - /dev/net/tun
+  #  environment:
+  #    - USER=${NORDVPN_USERNAME}
+  #    - PASS=${NORDVPN_PASSWORD}
+  #    - CONNECT=${NORDVPN_CONNECTION}
+  #    #- TECHNOLOGY=NordLynx
+  #    - PROTOCOL=TCP
+  #    - TECHNOLOGY=OpenVPN
+  #    - NETWORK=${HOST_SUBNET}
+  #    #- TZ=${TZ}
+  #    #- DNS=1.1.1.1,8.8.8.8
+  #    - DEBUG=on
+  #  ports:
+  #    # Transmission
+  #    #- 9091:9091
+  #    #- 51413:51413
+  #    #- 51413:51413/udp
+  #    #- 49153:49153
+  #    #- 49153:49153/udp
+  #      # Jackett
+  #    - 9117:9117
+  #      # RADAR
+  #    - 7878:7878
+  #      # OMBI
+  #    - 3579:3579
+  #      # SONARR
+  #    - 8989:8989
+  #      # LIDARR
+  #    - 8686:8686
+  #      # Lazylibrarian
+  #    - 5299:5299
+  #    - 8112:8112
+  #      # Bazarr
+  #    - 6767:6767
+  #      # NZBHydra2
+  #    - 5076:5076
+  #      # Flaresolverr
+  #    - 8191:8191
+  #      # nzbget
+  #    - 6789:6789
+  #      # Speedtest
+# #     - 8765:80
+  #  ulimits:
+  #    memlock:
+  #      soft: -1
+  #      hard: -1
+  #  network_mode: bridge
+  #  cpu_shares: 160
+  librespeed:
+    image: ghcr.io/linuxserver/librespeed
+    container_name: librespeed
     environment:
-      - USER=${NORDVPN_USERNAME}
-      - PASS=${NORDVPN_PASSWORD}
-      - CONNECT=${NORDVPN_CONNECTION}
-      - TECHNOLOGY=OpenVPN
-      - NETWORK=${HOST_SUBNET}
-    ports:
-      # Transmission
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
-      - 49153:49153
-      - 49153:49153/udp
-        # Jackett
-      - 9117:9117
-        # RADAR
-      - 7878:7878
-        # OMBI
-      - 3579:3579
-        # SONARR
-      - 8989:8989
-        # LIDARR
-      - 8686:8686
-        # Lazylibrarian
-      - 5299:5299
-      - 8112:8112
-        # Bazarr
-      - 6767:6767
-        # NZBHydra2
-      - 5076:5076
-        # Flaresolverr
-      - 8191:8191
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    network_mode: bridge
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PASSWORD=shobhit
+      - CUSTOM_RESULTS=false #optional
+      #- DB_TYPE=sqlite #optional
+      #- DB_NAME=DB_NAME #optional
+      #- DB_HOSTNAME=DB_HOSTNAME #optional
+      #- DB_USERNAME=DB_USERNAME #optional
+      #- DB_PASSWORD=DB_PASSWORD #optional
+      #- DB_PORT=DB_PORT #optional
+    volumes:
+      - ${CONFIG_DIRECTORY}librespeed/config:/config
+    network_mode: host
+    restart: unless-stopped
+
     #  emby:
     #image: ghcr.io/linuxserver/emby
     #container_name: emby
@@ -77,24 +111,33 @@ services:
     image: linuxserver/deluge
     container_name: deluge
     network_mode: host
+    restart: unless-stopped
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
       #- UMASK_SET=022 #optional
       - DELUGE_LOGLEVEL=error #optional
+    #ports:
+    #  - 9091:9091
+    #  - 51413:51413
+    #  - 51413:51413/udp
+    #  - 49153:49153
+    #  - 49153:49153/udp
+    #  - 8112:8112
     volumes:
       - ${CONFIG_DIRECTORY}deluge/config:/config
         #- ${DATA_DIRECTORY}torrents:/downloads
       - ${DATA_DIRECTORY}torrents:/mnt/media/torrents
-    restart: always
-    network_mode: service:vpn
-    depends_on:
-      - vpn
+    #restart: always
+    #network_mode: service:vpn
+    #depends_on:
+    #  - vpn
   jackett:
     image: linuxserver/jackett
     container_name: jackett
-    network_mode: service:vpn
+    network_mode: host
+    # network_mode: service:vpn
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -103,12 +146,14 @@ services:
       - ${CONFIG_DIRECTORY}jackett/config:/config
       - ${DATA_DIRECTORY}torrents/completed:/downloads
     depends_on:
-      - vpn
+      - flaresolverr
+      # - vpn
     restart: always
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
-    network_mode: service:vpn
+    #network_mode: service:vpn
+    network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -118,13 +163,15 @@ services:
       - ${DATA_DIRECTORY}:/mnt/media
     restart: always
     depends_on:
-      - vpn
+      #- vpn
       - deluge
       - jackett
+      - bazarr
   radarr:
     image: linuxserver/radarr
     container_name: radarr
-    network_mode: service:vpn
+    #network_mode: service:vpn
+    network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -134,19 +181,20 @@ services:
       - ${DATA_DIRECTORY}:/mnt/media
     restart: always
     depends_on:
-      - vpn
+      #- vpn
       - deluge
       - jackett
+      - bazarr
   lidarr:
     image: linuxserver/lidarr
     container_name: lidarr
-    network_mode: service:vpn
+#    network_mode: service:vpn
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TZ}
     depends_on:
-      - vpn
+#      - vpn
       - deluge
       - jackett
     volumes:
@@ -154,6 +202,7 @@ services:
       - ${DATA_DIRECTORY}music:/music
       - ${DATA_DIRECTORY}torrents/complete:/mnt/media/torrents/complete
     restart: always
+    network_mode: host
 #  heimdall:
 #    image: linuxserver/heimdall
 #    container_name: heimdall
@@ -177,28 +226,28 @@ services:
 #    volumes:
 #      - ./ddclient/config:/config
 #    restart: unless-stopped
-  lazylibrarian:
-    image: linuxserver/lazylibrarian
-    container_name: lazylibrarian
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      #- DOCKER_MODS=linuxserver/calibre-web:calibre|linuxserver/mods:lazylibrarian-ffmpeg #optional
-      - LANG=en_US
-    volumes:
-      - ${CONFIG_DIRECTORY}lazylibrarian/config:/config
-      - ${DATA_DIRECTORY}torrents/complete:/downloads
-      - ${DATA_DIRECTORY}books:/books
-      - ${DATA_DIRECTORY}audioBooks:/audioBooks
-    network_mode: service:vpn
-    #ports:
-    #  - 5299:5299
-    restart: always
-    depends_on:
-      - vpn
-      - deluge
-      - jackett
+#  lazylibrarian:
+#    image: linuxserver/lazylibrarian
+#    container_name: lazylibrarian
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#      #- DOCKER_MODS=linuxserver/calibre-web:calibre|linuxserver/mods:lazylibrarian-ffmpeg #optional
+#      - LANG=en_US
+#    volumes:
+#      - ${CONFIG_DIRECTORY}lazylibrarian/config:/config
+#      - ${DATA_DIRECTORY}torrents/complete:/downloads
+#      - ${DATA_DIRECTORY}books:/books
+#      - ${DATA_DIRECTORY}audioBooks:/audioBooks
+#    network_mode: service:vpn
+#    #ports:
+#    #  - 5299:5299
+#    restart: always
+#    depends_on:
+#      - vpn
+#      - deluge
+#      - jackett
   bazarr:
     image: linuxserver/bazarr
     container_name: bazarr
@@ -210,43 +259,74 @@ services:
       - ${CONFIG_DIRECTORY}bazarr/config:/config
       - ${DATA_DIRECTORY}Shows:/tv
       - ${DATA_DIRECTORY}Movies:/movies
-    network_mode: service:vpn
+    #network_mode: service:vpn
+    network_mode: host
     restart: always
-    depends_on:
-      - vpn
-  nzbhydra2:
-    image: linuxserver/nzbhydra2
-    container_name: nzbhydra2
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-    volumes:
-      - ${CONFIG_DIRECTORY}nzbhydra2:/config
-      - ${DATA_DIRECTORY}nzbhydra2:/downloads
-    network_mode: service:vpn
-    restart: always
-    depends_on:
-      - vpn
+    #depends_on:
+    #  - vpn
+#  nzbhydra2:
+#    image: linuxserver/nzbhydra2
+#    container_name: nzbhydra2
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#    volumes:
+#      - ${CONFIG_DIRECTORY}nzbhydra2:/config
+#      - ${DATA_DIRECTORY}nzbhydra2:/downloads
+#    network_mode: service:vpn
+#    restart: always
+#    depends_on:
+#      - vpn
   flaresolverr:
     image: flaresolverr/flaresolverr
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=info
     restart: always
-    depends_on:
-      - vpn
-    network_mode: service:vpn
-    #  organizr:
-    #image: organizr/organizr
-    #restart: always
-    #ports:
-    #  - 8081:80
-    #environment:
-    #  - PUID=${PUID}
-    #  - PGID=${PGID}
-    #  - TZ=${TZ}
-    #    - branch="v2-master"
-    #    - fpm="false"
-    #        volumes:
-    #     - ${CONFIG_DIRECTORY}organizr:/config
+    #depends_on:
+    #  - vpn
+    #network_mode: service:vpn
+    network_mode: host
+#  ombi:
+#    image: linuxserver/ombi:development
+#    container_name: ombi
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#      # - BASE_URL=/ombi #optional
+#    volumes:
+#      - ${CONFIG_DIRECTORY}ombi:/config
+#    network_mode: service:vpn
+#    depends_on:
+#      - vpn
+#    restart: unless-stopped
+#  organizr:
+#    image: organizr/organizr
+#    restart: always
+#    ports:
+#      - 8081:80
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#      - branch=v2-master
+#      #- fpm="false"
+#    volumes:
+#      - ${CONFIG_DIRECTORY}organizr:/config
+#  nzbget:
+#    image: ghcr.io/linuxserver/nzbget
+#    container_name: nzbget
+#    environment:
+#      - PUID=${PUID}
+#      - PGID=${PGID}
+#      - TZ=${TZ}
+#    volumes:
+#      - ${CONFIG_DIRECTORY}nzbget:/config
+#      - ${DATA_DIRECTORY}/nzbget/:/downloads
+#    network_mode: service:vpn
+#    restart: unless-stopped
+#    depends_on:
+#      - vpn
+#      - nzbhydra2

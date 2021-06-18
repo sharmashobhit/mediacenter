@@ -24,11 +24,37 @@ services:
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
     devices:
-        #- /dev/dri:/dev/dri #optional
-        #- /dev/vcsm:/dev/vcsm #optional
-        #- /dev/vchiq:/dev/vchiq #optional
+      - /dev/dri:/dev/dri #optional
+      #- /dev/vcsm:/dev/vcsm #optional
+      - /dev/vchiq:/dev/vchiq #optional
       - /dev/video10:/dev/video10 #optional
       - /dev/video11:/dev/video11 #optional
       - /dev/video12:/dev/video12 #optional
     restart: unless-stopped
-
+  emby:
+    image: ghcr.io/linuxserver/emby
+    container_name: emby
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      # - UMASK_SET=<022> #optional
+    volumes:
+      - ${CONFIG_DIRECTORY}emby/config:/config
+      - ${DATA_DIRECTORY}Shows:/data/tvshows
+      - ${DATA_DIRECTORY}Movies:/data/movies
+      - ${DATA_DIRECTORY}music:/data/music
+      - ${DATA_DIRECTORY}books:/data/books
+    #  - /path/for/transcoding:/transcode #optional
+      - /opt/vc/lib:/opt/vc/lib #optional
+    ports:
+      - 80:8096
+      - 8096:8096
+      - 8920:8920 #optional
+    devices:
+      - /dev/dri:/dev/dri #optional
+      - /dev/vchiq:/dev/vchiq #optional
+      - /dev/video10:/dev/video10 #optional
+      - /dev/video11:/dev/video11 #optional
+      - /dev/video12:/dev/video12 #optional
+    restart: always
